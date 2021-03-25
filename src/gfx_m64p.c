@@ -87,46 +87,6 @@ void plugin_init(void)
     }
 }
 
-void plugin_sync_dp(void)
-{
-    *gfx.MI_INTR_REG |= DP_INTERRUPT;
-    gfx.CheckInterrupts();
-}
-
-uint32_t** plugin_get_dp_registers(void)
-{
-    // HACK: this only works because the ordering of registers in GFX_INFO is
-    // the same as in dp_register
-    return (uint32_t**)&gfx.DPC_START_REG;
-}
-
-uint32_t** plugin_get_vi_registers(void)
-{
-    // HACK: this only works because the ordering of registers in GFX_INFO is
-    // the same as in vi_register
-    return (uint32_t**)&gfx.VI_STATUS_REG;
-}
-
-uint8_t* plugin_get_rdram(void)
-{
-    return gfx.RDRAM;
-}
-
-uint32_t plugin_get_rdram_size(void)
-{
-    return rdram_size;
-}
-
-uint8_t* plugin_get_dmem(void)
-{
-    return gfx.DMEM;
-}
-
-uint8_t* plugin_get_rom_header(void)
-{
-    return gfx.HEADER;
-}
-
 void plugin_close(void)
 {
 }
@@ -244,10 +204,10 @@ EXPORT void CALL RomClosed (void)
 
 EXPORT void CALL ShowCFB (void)
 {
-    vk_rasterize();
+	vk_rasterize();
 }
 
-struct frame_buffer *buf = NULL;
+
 EXPORT void CALL UpdateScreen (void)
 {
     vk_rasterize();

@@ -30,19 +30,9 @@ static const unsigned cmd_len_lut[64] = {
 	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,  1,  1,  1,  1,  1,
 };
 
-
+std::vector<RDP::RGBA>cols;
 void vk_rasterize()
 {
-
-
-
-
-
-	std::vector<RDP::RGBA>cols;
-	unsigned width =0;
-    unsigned height = 0;
-	frontend->scanout_sync(cols, width, height);
-
 	frontend->set_vi_register(RDP::VIRegister::Control, *GET_GFX_INFO(VI_STATUS_REG));
 	frontend->set_vi_register(RDP::VIRegister::Origin, *GET_GFX_INFO(VI_ORIGIN_REG));
 	frontend->set_vi_register(RDP::VIRegister::Width, *GET_GFX_INFO(VI_WIDTH_REG));
@@ -60,7 +50,17 @@ void vk_rasterize()
 
 	frontend->begin_frame_context();
 
+	unsigned width =0;
+    unsigned height = 0;
+	frontend->scanout_sync(cols, width, height);
+
 	
+if(width == 0 || height == 0)
+{
+screen_swap(true);
+return;
+}
+
 struct frame_buffer buf = { 0 };
 buf.pixels = (video_pixel*)cols.data();
 buf.valid = true;
@@ -167,7 +167,7 @@ bool vk_init()
 	uintptr_t aligned_rdram = reinterpret_cast<uintptr_t>(gfx.RDRAM);
 	uintptr_t offset = 0;
 	device.set_context(context);
-    device.init_frame_contexts(3);
+    device.init_frame_contexts(1);
 	::RDP::CommandProcessorFlags flags = 0;
 	frontend = new RDP::CommandProcessor(device, reinterpret_cast<void *>(aligned_rdram),
 				offset, rdram_size, rdram_size / 2, flags);

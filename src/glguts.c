@@ -38,6 +38,7 @@ static GLuint texture;
 
 static int32_t tex_width;
 static int32_t tex_height;
+static int32_t tex_display_height;
 
 void* IntGetProcAddress(const char *name)
 {
@@ -147,6 +148,8 @@ bool screen_write(struct frame_buffer* fb)
         glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, tex_width, tex_height,
             TEX_FORMAT, TEX_TYPE, fb->pixels);
     }
+ tex_display_height = fb->width;
+
     return buffer_size_changed;
 }
 
@@ -166,13 +169,13 @@ void screen_read(struct frame_buffer* fb, bool alpha)
 
 void gl_screen_render(int32_t win_width, int32_t win_height, int32_t win_x, int32_t win_y)
 {
-    int32_t hw =  win_height * win_width;
+    int32_t hw =  tex_display_height * win_width;
     int32_t wh = tex_width * win_height;
 
     // add letterboxes or pillarboxes if the window has a different aspect ratio
     // than the current display mode
     if (hw > wh) {
-        int32_t w_max = wh / win_width;
+        int32_t w_max = wh / tex_display_height;
         win_x += (win_width - w_max) / 2;
         win_width = w_max;
     } else if (hw < wh) {

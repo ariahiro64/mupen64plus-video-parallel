@@ -39,8 +39,6 @@ static GLuint texture;
 static int32_t tex_width;
 static int32_t tex_height;
 
-static int32_t tex_display_height;
-
 void* IntGetProcAddress(const char *name)
 {
     return CoreVideo_GL_GetProcAddress(name);
@@ -168,13 +166,13 @@ void screen_read(struct frame_buffer* fb, bool alpha)
 
 void gl_screen_render(int32_t win_width, int32_t win_height, int32_t win_x, int32_t win_y)
 {
-    int32_t hw = tex_height * win_width;
+    int32_t hw =  win_height * win_width;
     int32_t wh = tex_width * win_height;
 
     // add letterboxes or pillarboxes if the window has a different aspect ratio
     // than the current display mode
     if (hw > wh) {
-        int32_t w_max = wh / tex_display_height;
+        int32_t w_max = wh / win_width;
         win_x += (win_width - w_max) / 2;
         win_width = w_max;
     } else if (hw < wh) {
@@ -202,8 +200,6 @@ void gl_screen_close(void)
 {
     tex_width = 0;
     tex_height = 0;
-
-    tex_display_height = 0;
 
     glDeleteTextures(1, &texture);
     glDeleteVertexArrays(1, &vao);

@@ -33,6 +33,8 @@ static const unsigned cmd_len_lut[64] = {
 std::vector<RDP::RGBA>cols;
 void vk_rasterize()
 {
+if(frontend)
+{
 	frontend->set_vi_register(RDP::VIRegister::Control, *GET_GFX_INFO(VI_STATUS_REG));
 	frontend->set_vi_register(RDP::VIRegister::Origin, *GET_GFX_INFO(VI_ORIGIN_REG));
 	frontend->set_vi_register(RDP::VIRegister::Width, *GET_GFX_INFO(VI_WIDTH_REG));
@@ -69,6 +71,8 @@ buf.width = width;
 buf.pitch = width;
 screen_write(&buf);
 screen_swap(false);
+}
+
 }
 
 void vk_process_commands()
@@ -136,7 +140,7 @@ void vk_process_commands()
 		if (RDP::Op(command) == RDP::Op::SyncFull)
 		{
 			// For synchronous RDP:
-			frontend->wait_for_timeline(frontend->signal_timeline());
+			if(frontend)frontend->wait_for_timeline(frontend->signal_timeline());
 			*gfx.MI_INTR_REG |= DP_INTERRUPT;
 			gfx.CheckInterrupts();
 		}
@@ -153,8 +157,12 @@ void vk_process_commands()
 void vk_destroy()
 {
 	screen_close();
-	delete frontend;
-  frontend = nullptr;
+	if(frontend)
+	{
+		delete frontend;
+		frontend = nullptr;
+	}
+  
 }
 
 bool vk_init()

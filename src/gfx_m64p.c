@@ -199,7 +199,7 @@ EXPORT int CALL RomOpen (void)
 
 EXPORT void CALL RomClosed (void)
 {
- 
+ vk_destroy();
 }
 
 EXPORT void CALL ShowCFB (void)

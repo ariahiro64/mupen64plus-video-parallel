@@ -232,6 +232,8 @@ void screen_init()
     CoreVideo_GL_SetAttribute(M64P_GL_CONTEXT_MINOR_VERSION, 3);
     CoreVideo_SetVideoMode(window_width, window_height, 0, window_fullscreen ? M64VIDEO_FULLSCREEN : M64VIDEO_WINDOWED, M64VIDEOFLAG_SUPPORT_RESIZING);
 
+    CoreVideo_SetCaption("Mupen64Plus-Parallel");
+
     // load OpenGL function pointers
     ogl_LoadFunctions();
 

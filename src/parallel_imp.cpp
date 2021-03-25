@@ -10,7 +10,7 @@ static int cmd_cur;
 static int cmd_ptr;
 static uint32_t cmd_data[0x00040000 >> 2];
 
-RDP::CommandProcessor* frontend;
+RDP::CommandProcessor* frontend = nullptr;
 Device device;
 Context context;
 
@@ -57,6 +57,9 @@ void vk_rasterize()
 	frontend->set_vi_register(RDP::VIRegister::VBurst, *GET_GFX_INFO(VI_V_BURST_REG));
 	frontend->set_vi_register(RDP::VIRegister::XScale, *GET_GFX_INFO(VI_X_SCALE_REG));
 	frontend->set_vi_register(RDP::VIRegister::YScale, *GET_GFX_INFO(VI_Y_SCALE_REG));
+
+	frontend->begin_frame_context();
+
 	
 struct frame_buffer buf = { 0 };
 buf.pixels = (video_pixel*)cols.data();
@@ -133,8 +136,7 @@ void vk_process_commands()
 		if (RDP::Op(command) == RDP::Op::SyncFull)
 		{
 			// For synchronous RDP:
-			if (synchronous && frontend)
-				frontend->wait_for_timeline(frontend->signal_timeline());
+			frontend->wait_for_timeline(frontend->signal_timeline());
 			*gfx.MI_INTR_REG |= DP_INTERRUPT;
 			gfx.CheckInterrupts();
 		}
@@ -151,7 +153,8 @@ void vk_process_commands()
 void vk_destroy()
 {
 	screen_close();
-	
+	delete frontend;
+  frontend = nullptr;
 }
 
 bool vk_init()

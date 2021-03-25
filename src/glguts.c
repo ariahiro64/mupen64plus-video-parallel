@@ -25,10 +25,12 @@ int32_t window_width = 640;
 int32_t window_height = 480;
 int32_t window_fullscreen = false;
 
+
 #include "gl_core_3_3.c"
 #define SHADER_HEADER "#version 330 core\n"
 #define TEX_FORMAT GL_RGBA
-#define TEX_TYPE GL_UNSIGNED_INT_8_8_8_8
+#define TEX_TYPE GL_UNSIGNED_BYTE
+
 
 static GLuint program;
 static GLuint vao;
@@ -140,7 +142,7 @@ bool screen_write(struct frame_buffer* fb)
         // set pitch for all unpacking operations
         glPixelStorei(GL_UNPACK_ROW_LENGTH, fb->pitch);
         // reallocate texture buffer on GPU
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tex_width,
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, tex_width,
             tex_height, 0, TEX_FORMAT, TEX_TYPE, fb->pixels);
     } else {
         // copy local buffer to GPU texture buffer

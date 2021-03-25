@@ -26,13 +26,6 @@
 #define KEY_FULLSCREEN "Fullscreen"
 #define KEY_SCREEN_WIDTH "ScreenWidth"
 #define KEY_SCREEN_HEIGHT "ScreenHeight"
-#define KEY_PARALLEL "Parallel"
-#define KEY_NUM_WORKERS "NumWorkers"
-
-#define KEY_VI_MODE "ViMode"
-#define KEY_VI_INTERP "ViInterpolation"
-#define KEY_VI_WIDESCREEN "ViWidescreen"
-#define KEY_VI_HIDE_OVERSCAN "ViHideOverscan"
 
 #include <stdlib.h>
 #include <string.h>
@@ -60,12 +53,15 @@ static bool plugin_initialized;
 void (*debug_callback)(void *, int, const char *);
 void *debug_call_context;
 
+extern int32_t window_width;
+extern int32_t window_height;
+extern int32_t window_fullscreen;
+
 m64p_dynlib_handle CoreLibHandle;
 GFX_INFO gfx;
 void (*render_callback)(int);
 
 static m64p_handle configVideoGeneral = NULL;
-static m64p_handle configVideoAngrylionPlus = NULL;
 
 #define PLUGIN_VERSION              0x000001
 #define VIDEO_PLUGIN_API_VERSION    0x020200
@@ -110,6 +106,12 @@ EXPORT m64p_error CALL PluginStartup(m64p_dynlib_handle _CoreLibHandle, void *Co
     ConfigSetDefaultBool = (ptr_ConfigSetDefaultBool)DLSYM(CoreLibHandle, "ConfigSetDefaultBool");
     ConfigGetParamInt = (ptr_ConfigGetParamInt)DLSYM(CoreLibHandle, "ConfigGetParamInt");
     ConfigGetParamBool = (ptr_ConfigGetParamBool)DLSYM(CoreLibHandle, "ConfigGetParamBool");
+
+    ConfigOpenSection("Video-General", &configVideoGeneral);
+    ConfigSetDefaultBool(configVideoGeneral, KEY_FULLSCREEN, 0, "Use fullscreen mode if True, or windowed mode if False");
+    ConfigSetDefaultInt(configVideoGeneral, KEY_SCREEN_WIDTH, 640, "Width of output window or fullscreen width");
+    ConfigSetDefaultInt(configVideoGeneral, KEY_SCREEN_HEIGHT, 480, "Height of output window or fullscreen height");
+    ConfigSaveSection("Video-General")
 
     
     
@@ -189,6 +191,9 @@ EXPORT void CALL ProcessRDPList(void)
 
 EXPORT int CALL RomOpen (void)
 {
+    window_fullscreen = ConfigGetParamBool(configVideoGeneral, KEY_FULLSCREEN);
+    window_width = ConfigGetParamInt(configVideoGeneral, KEY_SCREEN_WIDTH);
+    window_height = ConfigGetParamInt(configVideoGeneral, KEY_SCREEN_HEIGHT);
     plugin_init();
     vk_init();
 

@@ -223,7 +223,7 @@ EXPORT void CALL ProcessDList(void)
 
 EXPORT void CALL ProcessRDPList(void)
 {
-   //RDP::process_commands();
+   vk_process_commands();
 
 }
 

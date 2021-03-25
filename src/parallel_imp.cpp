@@ -34,7 +34,16 @@ static const unsigned cmd_len_lut[64] = {
 void vk_rasterize()
 {
 
-frontend->set_vi_register(RDP::VIRegister::Control, *GET_GFX_INFO(VI_STATUS_REG));
+
+
+
+
+	std::vector<RDP::RGBA>cols;
+	unsigned width =0;
+    unsigned height = 0;
+	frontend->scanout_sync(cols, width, height);
+
+	frontend->set_vi_register(RDP::VIRegister::Control, *GET_GFX_INFO(VI_STATUS_REG));
 	frontend->set_vi_register(RDP::VIRegister::Origin, *GET_GFX_INFO(VI_ORIGIN_REG));
 	frontend->set_vi_register(RDP::VIRegister::Width, *GET_GFX_INFO(VI_WIDTH_REG));
 	frontend->set_vi_register(RDP::VIRegister::Intr, *GET_GFX_INFO(VI_INTR_REG));
@@ -48,13 +57,6 @@ frontend->set_vi_register(RDP::VIRegister::Control, *GET_GFX_INFO(VI_STATUS_REG)
 	frontend->set_vi_register(RDP::VIRegister::VBurst, *GET_GFX_INFO(VI_V_BURST_REG));
 	frontend->set_vi_register(RDP::VIRegister::XScale, *GET_GFX_INFO(VI_X_SCALE_REG));
 	frontend->set_vi_register(RDP::VIRegister::YScale, *GET_GFX_INFO(VI_Y_SCALE_REG));
-
-
-
-	std::vector<RDP::RGBA>cols;
-	unsigned width =0;
-    unsigned height = 0;
-	frontend->scanout_sync(cols, width, height);
 	
 struct frame_buffer buf = { 0 };
 buf.pixels = (video_pixel*)cols.data();
@@ -63,7 +65,7 @@ buf.height = height;
 buf.width = width;
 buf.pitch = width;
 screen_write(&buf);
-screen_swap(true);
+screen_swap(false);
 }
 
 void vk_process_commands()

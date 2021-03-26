@@ -1,17 +1,17 @@
-#include "vulkan_headers.hpp"
+
 #include "gfx_m64p.h"
 #include "glguts.h"
-#include "gfxstructdefs.h"
-#include <memory>
-#include <vector>
+#include "gfxstructdefs.h" 
 
-#include "rdp_device.hpp"
-#include "context.hpp"
-#include "device.hpp"
+
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+extern int32_t vk_rescaling;
+extern bool vk_ssreadbacks;
+extern bool vk_ssdither;
 
     void vk_rasterize();
     void vk_process_commands();

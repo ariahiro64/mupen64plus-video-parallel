@@ -1,4 +1,10 @@
 #include "parallel_imp.h"
+#include "vulkan_headers.hpp"
+#include <memory>
+#include <vector>
+#include "rdp_device.hpp"
+#include "context.hpp"
+#include "device.hpp"
 
 
 using namespace Vulkan;
@@ -35,9 +41,11 @@ static const unsigned cmd_len_lut[64] = {
 	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,  1,  1,  1,  1,  1,
 };
 
-std::vector<RDP::RGBA>cols;
+
+
 void vk_rasterize()
 {
+
 if(frontend)
 {
 	frontend->set_vi_register(RDP::VIRegister::Control, *GET_GFX_INFO(VI_STATUS_REG));
@@ -59,6 +67,7 @@ if(frontend)
 
 	unsigned width =0;
     unsigned height = 0;
+std::vector<RDP::RGBA>cols;
 	frontend->scanout_sync(cols, width, height);
 
 	
@@ -183,27 +192,27 @@ bool vk_init()
     device.init_frame_contexts(1);
 	::RDP::CommandProcessorFlags flags = 0;
 
-    switch (vk_upscaling)
+    switch (vk_rescaling)
 	{
 	case 0:
 		break;
 	case 1:
-	    flags |= COMMAND_PROCESSOR_FLAG_UPSCALING_2X_BIT;
+	    flags |= RDP::COMMAND_PROCESSOR_FLAG_UPSCALING_2X_BIT;
 		break;
 	case 2:
-	    flags |= COMMAND_PROCESSOR_FLAG_UPSCALING_4X_BIT;
+	    flags |= RDP::COMMAND_PROCESSOR_FLAG_UPSCALING_4X_BIT;
 		break;
 	case 3:
-	    flags |= COMMAND_PROCESSOR_FLAG_UPSCALING_8X_BIT;
+	    flags |= RDP::COMMAND_PROCESSOR_FLAG_UPSCALING_8X_BIT;
 		break;
 	
 	default:
 		break;
 	}
-	if (vk_upscaling >1 && vk_ssreadbacks)
-		flags |= COMMAND_PROCESSOR_FLAG_SUPER_SAMPLED_READ_BACK_BIT;
+	if (vk_rescaling >1 && vk_ssreadbacks)
+		flags |= RDP::COMMAND_PROCESSOR_FLAG_SUPER_SAMPLED_READ_BACK_BIT;
 	if (vk_ssdither)
-		flags |= COMMAND_PROCESSOR_FLAG_SUPER_SAMPLED_DITHER_BIT;
+		flags |= RDP::COMMAND_PROCESSOR_FLAG_SUPER_SAMPLED_DITHER_BIT;
 
 	frontend = new RDP::CommandProcessor(device, reinterpret_cast<void *>(aligned_rdram),
 				offset, rdram_size, rdram_size / 2, flags);

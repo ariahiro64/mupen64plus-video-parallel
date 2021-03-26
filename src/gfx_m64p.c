@@ -36,6 +36,7 @@
 
 #include "gfx_m64p.h"
 #include "glguts.h"
+#include "parallel_imp.h"
 
 #include "api/m64p_types.h"
 #include "api/m64p_config.h"

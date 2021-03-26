@@ -1,0 +1,3 @@
+[submodule "src/parallel-rdp"]
+	path = src/parallel-rdp
+	url = https://github.com/Themaister/parallel-rdp-standalone.git

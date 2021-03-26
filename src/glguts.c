@@ -22,8 +22,8 @@ static ptr_VidExt_GL_SwapBuffers CoreVideo_GL_SwapBuffers = NULL;
 static bool toggle_fs;
 
 // framebuffer texture states
-int32_t window_width = 640;
-int32_t window_height = 480;
+int32_t window_width = 1024;
+int32_t window_height = 768;
 int32_t window_fullscreen = false;
 
 #include "gl_core_3_3.c"
@@ -245,13 +245,6 @@ void screen_init()
     CoreVideo_GL_SetAttribute(M64P_GL_CONTEXT_PROFILE_MASK, M64P_GL_CONTEXT_PROFILE_CORE);
     CoreVideo_GL_SetAttribute(M64P_GL_CONTEXT_MAJOR_VERSION, 3);
     CoreVideo_GL_SetAttribute(M64P_GL_CONTEXT_MINOR_VERSION, 3);
-
-    if(vk_rescaling)
-    {
-      window_width *= vk_rescaling;
-      window_height *= vk_rescaling;
-
-    }
 
     CoreVideo_SetVideoMode(window_width, window_height, 0, window_fullscreen ? M64VIDEO_FULLSCREEN : M64VIDEO_WINDOWED, M64VIDEOFLAG_SUPPORT_RESIZING);
 

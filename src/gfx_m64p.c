@@ -26,6 +26,9 @@
 #define KEY_FULLSCREEN "Fullscreen"
 #define KEY_SCREEN_WIDTH "ScreenWidth"
 #define KEY_SCREEN_HEIGHT "ScreenHeight"
+#define KEY_UPSCALING "Upscaling"
+#define KEY_SSDITHER "SuperscaledDither"
+#define KEY_SSREADBACKS "SuperscaledReads"
 
 #include <stdlib.h>
 #include <string.h>
@@ -62,6 +65,7 @@ GFX_INFO gfx;
 void (*render_callback)(int);
 
 static m64p_handle configVideoGeneral = NULL;
+static m64p_handle configVideoParallel = NULL;
 
 #define PLUGIN_VERSION              0x000001
 #define VIDEO_PLUGIN_API_VERSION    0x020200
@@ -108,9 +112,13 @@ EXPORT m64p_error CALL PluginStartup(m64p_dynlib_handle _CoreLibHandle, void *Co
     ConfigGetParamBool = (ptr_ConfigGetParamBool)DLSYM(CoreLibHandle, "ConfigGetParamBool");
 
     ConfigOpenSection("Video-General", &configVideoGeneral);
+    ConfigOpenSection("Video-Parallel", &configVideoParallel);
     ConfigSetDefaultBool(configVideoGeneral, KEY_FULLSCREEN, 0, "Use fullscreen mode if True, or windowed mode if False");
     ConfigSetDefaultInt(configVideoGeneral, KEY_SCREEN_WIDTH, 640, "Width of output window or fullscreen width");
     ConfigSetDefaultInt(configVideoGeneral, KEY_SCREEN_HEIGHT, 480, "Height of output window or fullscreen height");
+    ConfigSetDefaultInt(configVideoParallel, KEY_UPSCALING, 0, "Amount of rescaling: 0=None, 1=2x, 2=4x, 3=8x");
+    ConfigSetDefaultBool(configVideoParallel, KEY_SSREADBACKS, 0, "Enable superscaling of readbacks when upsampling");
+    ConfigSetDefaultBool(configVideoParallel, KEY_SSDITHER, 0, "Enable superscaling of dithering when upsampling");
     ConfigSaveSection("Video-General");
 
     
@@ -194,6 +202,9 @@ EXPORT int CALL RomOpen (void)
     window_fullscreen = ConfigGetParamBool(configVideoGeneral, KEY_FULLSCREEN);
     window_width = ConfigGetParamInt(configVideoGeneral, KEY_SCREEN_WIDTH);
     window_height = ConfigGetParamInt(configVideoGeneral, KEY_SCREEN_HEIGHT);
+    vk_rescaling = ConfigGetParamInt(configVideoParallel, KEY_UPSCALING);
+    vk_ssreadbacks = ConfigGetParamBool(configVideoParallel, KEY_SSREADBACKS);
+    vk_ssdither = ConfigGetParamBool(configVideoParallel, KEY_SSDITHER);
     plugin_init();
     vk_init();
 

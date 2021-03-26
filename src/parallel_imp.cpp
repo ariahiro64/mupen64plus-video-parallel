@@ -14,6 +14,11 @@ RDP::CommandProcessor* frontend = nullptr;
 Device device;
 Context context;
 
+
+int32_t vk_rescaling;
+bool vk_ssreadbacks;
+bool vk_ssdither;
+
 unsigned width, height;
 unsigned overscan;
 unsigned upscaling = 1;
@@ -177,6 +182,29 @@ bool vk_init()
 	device.set_context(context);
     device.init_frame_contexts(1);
 	::RDP::CommandProcessorFlags flags = 0;
+
+    switch (vk_upscaling)
+	{
+	case 0:
+		break;
+	case 1:
+	    flags |= COMMAND_PROCESSOR_FLAG_UPSCALING_2X_BIT;
+		break;
+	case 2:
+	    flags |= COMMAND_PROCESSOR_FLAG_UPSCALING_4X_BIT;
+		break;
+	case 3:
+	    flags |= COMMAND_PROCESSOR_FLAG_UPSCALING_8X_BIT;
+		break;
+	
+	default:
+		break;
+	}
+	if (vk_upscaling >1 && vk_ssreadbacks)
+		flags |= COMMAND_PROCESSOR_FLAG_SUPER_SAMPLED_READ_BACK_BIT;
+	if (vk_ssdither)
+		flags |= COMMAND_PROCESSOR_FLAG_SUPER_SAMPLED_DITHER_BIT;
+
 	frontend = new RDP::CommandProcessor(device, reinterpret_cast<void *>(aligned_rdram),
 				offset, rdram_size, rdram_size / 2, flags);
     if(!frontend->device_is_supported()) {

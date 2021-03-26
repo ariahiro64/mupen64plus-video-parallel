@@ -1,5 +1,4 @@
 #include "parallel_imp.h"
-#include "vulkan_headers.hpp"
 #include <memory>
 #include <vector>
 #include "rdp_device.hpp"

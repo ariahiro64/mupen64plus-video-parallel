@@ -26,6 +26,7 @@
 # detect operating system
 UNAME ?= $(shell uname -s)
 OS := NONE
+
 ifeq ("$(UNAME)","Linux")
   OS = LINUX
   SO_EXTENSION = so
@@ -62,6 +63,7 @@ ifneq ("$(filter GNU/kFreeBSD kfreebsd,$(UNAME))","")
   SHARED = -shared
 endif
 ifeq ("$(patsubst MINGW%,MINGW,$(UNAME))","MINGW")
+platform += win
   OS = MINGW
   SO_EXTENSION = dll
   SHARED = -shared
@@ -326,6 +328,7 @@ CXXFLAGS += $(PARALLEL_RDP_INCLUDE_DIRS) -DHAVE_PARALLEL_RDP
 SOURCE +=  $(PARALLEL_RDP_SOURCES_CXX) #$(VIDEODIR_PARALLEL)/parallel.cpp $(VIDEODIR_PARALLEL)/rdp.cpp
 SOURCE += $(PARALLEL_RDP_SOURCES_C)
 SOURCE += $(SRCDIR)/parallel_imp.cpp
+
 LDFLAGS += $(PARALLEL_RDP_LDFLAGS)
 
 # generate a list of object files build, make a temporary directory for them

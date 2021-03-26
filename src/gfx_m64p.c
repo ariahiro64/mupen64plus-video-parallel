@@ -29,6 +29,16 @@
 #define KEY_UPSCALING "Upscaling"
 #define KEY_SSDITHER "SuperscaledDither"
 #define KEY_SSREADBACKS "SuperscaledReads"
+#define KEY_OVERSCANCROP "CropOverscan"
+#define KEY_DIVOT "Divot"
+#define KEY_GAMMADITHER "GammaDither"
+#define KEY_AA "VIAA"
+#define KEY_VIBILERP "VIBilerp"
+#define KEY_VIDITHER "VIDither"
+#define KEY_DOWNSCALE "DownScale"
+#define KEY_NATIVETEXTRECT "NativeTextRECT"
+#define KEY_NATIVETEXTLOD "NativeTextLOD"
+#define KEY_DEINTERLACE "Deinterlace"
 
 #include <stdlib.h>
 #include <string.h>
@@ -119,11 +129,20 @@ EXPORT m64p_error CALL PluginStartup(m64p_dynlib_handle _CoreLibHandle, void *Co
     ConfigOpenSection("Video-General", &configVideoGeneral);
     ConfigOpenSection("Video-Parallel", &configVideoParallel);
     ConfigSetDefaultBool(configVideoGeneral, KEY_FULLSCREEN, 0, "Use fullscreen mode if True, or windowed mode if False");
-    ConfigSetDefaultInt(configVideoGeneral, KEY_SCREEN_WIDTH, 640, "Width of output window or fullscreen width");
-    ConfigSetDefaultInt(configVideoGeneral, KEY_SCREEN_HEIGHT, 480, "Height of output window or fullscreen height");
     ConfigSetDefaultInt(configVideoParallel, KEY_UPSCALING, 0, "Amount of rescaling: 0=None, 2=2x, 4=4x, 8=8x");
     ConfigSetDefaultBool(configVideoParallel, KEY_SSREADBACKS, 0, "Enable superscaling of readbacks when upsampling");
     ConfigSetDefaultBool(configVideoParallel, KEY_SSDITHER, 0, "Enable superscaling of dithering when upsampling");
+
+    ConfigSetDefaultBool(configVideoParallel, KEY_DEINTERLACE, 0, "Deinterlacing method. Weave should only be used with 1x scaling factor. False=Bob, True=Weave");
+    ConfigSetDefaultInt(configVideoParallel, KEY_OVERSCANCROP, 0, "Amount of overscan pixels to crop");
+    ConfigSetDefaultBool(configVideoParallel, KEY_AA, 1, "VI anti-aliasing, smooths polygon edges.");
+    ConfigSetDefaultBool(configVideoParallel, KEY_DIVOT, 1, "Allow VI divot filter, cleans up stray black pixels.");
+    ConfigSetDefaultBool(configVideoParallel, KEY_GAMMADITHER, 1, "Allow VI gamma dither.");
+    ConfigSetDefaultBool(configVideoParallel, KEY_VIBILERP, 1, "Allow VI bilinear scaling.");
+    ConfigSetDefaultBool(configVideoParallel, KEY_VIDITHER, 1, "Allow VI dedither.");
+    ConfigSetDefaultInt(configVideoParallel, KEY_DOWNSCALE, 0, "Downsampling factor, Downscales output after VI, equivalent to SSAA. 0=disabled, 1=1/2, 2=1/4, 3=1/8");
+    ConfigSetDefaultBool(configVideoParallel, KEY_NATIVETEXTLOD, 0, "Use native texture LOD computation when upscaling, effectively a LOD bias.");
+    ConfigSetDefaultBool(configVideoParallel, KEY_NATIVETEXTRECT, 1, "Native resolution TEX_RECT. TEX_RECT primitives should generally be TEX_RECT primitives should generally be rendered at native resolution to avoid seams.");
     ConfigSaveSection("Video-General");
 
     plugin_initialized = true;
@@ -206,6 +225,18 @@ EXPORT int CALL RomOpen(void)
     vk_rescaling = ConfigGetParamInt(configVideoParallel, KEY_UPSCALING);
     vk_ssreadbacks = ConfigGetParamBool(configVideoParallel, KEY_SSREADBACKS);
     vk_ssdither = ConfigGetParamBool(configVideoParallel, KEY_SSDITHER);
+
+    vk_divot_filter = ConfigGetParamBool(configVideoParallel, KEY_DIVOT);
+    vk_gamma_dither = ConfigGetParamBool(configVideoParallel, KEY_GAMMADITHER);
+    vk_vi_scale = ConfigGetParamBool(configVideoParallel, KEY_VIBILERP);
+    vk_vi_aa = ConfigGetParamBool(configVideoParallel, KEY_AA);
+    vk_dither_filter = ConfigGetParamBool(configVideoParallel, KEY_VIDITHER);
+    vk_native_texture_lod = ConfigGetParamBool(configVideoParallel, KEY_NATIVETEXTLOD);
+    vk_native_tex_rect = ConfigGetParamBool(configVideoParallel, KEY_NATIVETEXTRECT);
+    vk_interlacing = ConfigGetParamBool(configVideoGeneral, KEY_DEINTERLACE);
+    vk_downscaling_steps = ConfigGetParamInt(configVideoGeneral, KEY_DOWNSCALE);
+    vk_overscan = ConfigGetParamInt(configVideoGeneral, KEY_OVERSCANCROP);
+
     plugin_init();
     vk_init();
 

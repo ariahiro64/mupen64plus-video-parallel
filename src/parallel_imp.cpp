@@ -22,14 +22,13 @@ bool vk_ssreadbacks;
 bool vk_ssdither;
 
 unsigned width, height;
-unsigned overscan;
-unsigned upscaling = 1;
-unsigned downscaling_steps = 0;
-bool native_texture_lod = false;
-bool native_tex_rect = true;
-bool synchronous = true, divot_filter = true, gamma_dither = true;
-bool vi_aa = true, vi_scale = true, dither_filter = true;
-bool interlacing = true, super_sampled_read_back = false, super_sampled_dither = true;
+unsigned vk_overscan;
+unsigned vk_downscaling_steps;
+bool vk_native_texture_lod;
+bool vk_native_tex_rect;
+bool vk_synchronous, vk_divot_filter, vk_gamma_dither;
+bool vk_vi_aa, vk_vi_scale, vk_dither_filter;
+bool vk_interlacing;
 
 static const unsigned cmd_len_lut[64] = {
 	1, 1, 1, 1, 1, 1, 1, 1, 4, 6, 12, 14, 12, 14, 20, 22,
@@ -42,10 +41,16 @@ static const unsigned cmd_len_lut[64] = {
 void vk_blit(std::vector<RDP::RGBA> &colors, unsigned &width, unsigned &height)
 {
 	RDP::ScanoutOptions opts = {};
-	opts.blend_previous_frame = true;
-	opts.upscale_deinterlacing = false;
 	opts.persist_frame_on_invalid_input = true;
-	opts.crop_overscan_pixels =true;
+	opts.vi.aa = vk_vi_aa;
+	opts.vi.scale = vk_vi_scale;
+	opts.vi.dither_filter = vk_dither_filter;
+	opts.vi.divot_filter = vk_divot_filter;
+	opts.vi.gamma_dither = vk_gamma_dither;
+	opts.blend_previous_frame = vk_interlacing;
+	opts.upscale_deinterlacing = !vk_interlacing;
+	opts.downscale_steps = vk_downscaling_steps;
+	opts.crop_overscan_pixels = vk_overscan;
 
 	RDP::VIScanoutBuffer scanout;
 	frontend->scanout_async_buffer(scanout, opts);
@@ -64,10 +69,9 @@ void vk_blit(std::vector<RDP::RGBA> &colors, unsigned &width, unsigned &height)
 
 	scanout.fence->wait();
 	memcpy(colors.data(), device.map_host_buffer(*scanout.buffer, Vulkan::MEMORY_ACCESS_READ_BIT),
-	       width * height * sizeof(uint32_t));
+		   width * height * sizeof(uint32_t));
 	device.unmap_host_buffer(*scanout.buffer, Vulkan::MEMORY_ACCESS_READ_BIT);
 }
-
 
 void vk_rasterize()
 {

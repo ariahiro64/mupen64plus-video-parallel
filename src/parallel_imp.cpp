@@ -39,6 +39,36 @@ static const unsigned cmd_len_lut[64] = {
 };
 
 
+void vk_blit(std::vector<RDP::RGBA> &colors, unsigned &width, unsigned &height)
+{
+	RDP::ScanoutOptions opts = {};
+	opts.blend_previous_frame = true;
+	opts.upscale_deinterlacing = false;
+	opts.persist_frame_on_invalid_input = true;
+	opts.crop_overscan_pixels =true;
+
+	RDP::VIScanoutBuffer scanout;
+	frontend->scanout_async_buffer(scanout, opts);
+
+	if (!scanout.width || !scanout.height)
+	{
+		width = 0;
+		height = 0;
+		colors.clear();
+		return;
+	}
+
+	width = scanout.width;
+	height = scanout.height;
+	colors.resize(width * height);
+
+	scanout.fence->wait();
+	memcpy(colors.data(), device.map_host_buffer(*scanout.buffer, Vulkan::MEMORY_ACCESS_READ_BIT),
+	       width * height * sizeof(uint32_t));
+	device.unmap_host_buffer(*scanout.buffer, Vulkan::MEMORY_ACCESS_READ_BIT);
+}
+
+
 void vk_rasterize()
 {
 
@@ -64,7 +94,7 @@ void vk_rasterize()
 		unsigned width = 0;
 		unsigned height = 0;
 		std::vector<RDP::RGBA> cols;
-		frontend->scanout_sync(cols, width, height);
+		vk_blit(cols, width, height);
 
 		if (width == 0 || height == 0)
 		{
@@ -87,9 +117,6 @@ void vk_process_commands()
 {
 	const uint32_t DP_CURRENT = *GET_GFX_INFO(DPC_CURRENT_REG) & 0x00FFFFF8;
 	const uint32_t DP_END = *GET_GFX_INFO(DPC_END_REG) & 0x00FFFFF8;
-	// This works in parallel-n64, but not this repo for some reason.
-	// Angrylion does not clear this bit here.
-	//*GET_GFX_INFO(DPC_STATUS_REG) &= ~DP_STATUS_FREEZE;
 
 	int length = DP_END - DP_CURRENT;
 	if (length <= 0)
@@ -191,20 +218,20 @@ bool vk_init()
 	{
 	case 0:
 		break;
-	case 1:
+	case 2:
 		flags |= RDP::COMMAND_PROCESSOR_FLAG_UPSCALING_2X_BIT;
 		break;
-	case 2:
+	case 4:
 		flags |= RDP::COMMAND_PROCESSOR_FLAG_UPSCALING_4X_BIT;
 		break;
-	case 3:
+	case 8:
 		flags |= RDP::COMMAND_PROCESSOR_FLAG_UPSCALING_8X_BIT;
 		break;
 
 	default:
 		break;
 	}
-	if (vk_rescaling > 1 && vk_ssreadbacks)
+	if (vk_rescaling && vk_ssreadbacks)
 		flags |= RDP::COMMAND_PROCESSOR_FLAG_SUPER_SAMPLED_READ_BACK_BIT;
 	if (vk_ssdither)
 		flags |= RDP::COMMAND_PROCESSOR_FLAG_SUPER_SAMPLED_DITHER_BIT;

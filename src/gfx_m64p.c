@@ -121,7 +121,7 @@ EXPORT m64p_error CALL PluginStartup(m64p_dynlib_handle _CoreLibHandle, void *Co
     ConfigSetDefaultBool(configVideoGeneral, KEY_FULLSCREEN, 0, "Use fullscreen mode if True, or windowed mode if False");
     ConfigSetDefaultInt(configVideoGeneral, KEY_SCREEN_WIDTH, 640, "Width of output window or fullscreen width");
     ConfigSetDefaultInt(configVideoGeneral, KEY_SCREEN_HEIGHT, 480, "Height of output window or fullscreen height");
-    ConfigSetDefaultInt(configVideoParallel, KEY_UPSCALING, 0, "Amount of rescaling: 0=None, 1=2x, 2=4x, 3=8x");
+    ConfigSetDefaultInt(configVideoParallel, KEY_UPSCALING, 0, "Amount of rescaling: 0=None, 2=2x, 4=4x, 8=8x");
     ConfigSetDefaultBool(configVideoParallel, KEY_SSREADBACKS, 0, "Enable superscaling of readbacks when upsampling");
     ConfigSetDefaultBool(configVideoParallel, KEY_SSDITHER, 0, "Enable superscaling of dithering when upsampling");
     ConfigSaveSection("Video-General");

@@ -1,5 +1,6 @@
 #include "glguts.h"
 #include "gfx_m64p.h"
+#include "parallel_imp.h"
 
 #include <string.h>
 #include <stdint.h>
@@ -244,6 +245,14 @@ void screen_init()
     CoreVideo_GL_SetAttribute(M64P_GL_CONTEXT_PROFILE_MASK, M64P_GL_CONTEXT_PROFILE_CORE);
     CoreVideo_GL_SetAttribute(M64P_GL_CONTEXT_MAJOR_VERSION, 3);
     CoreVideo_GL_SetAttribute(M64P_GL_CONTEXT_MINOR_VERSION, 3);
+
+    if(vk_rescaling)
+    {
+      window_width *= vk_rescaling;
+      window_height *= vk_rescaling;
+
+    }
+
     CoreVideo_SetVideoMode(window_width, window_height, 0, window_fullscreen ? M64VIDEO_FULLSCREEN : M64VIDEO_WINDOWED, M64VIDEOFLAG_SUPPORT_RESIZING);
 
     CoreVideo_SetCaption("Mupen64Plus-Parallel");

@@ -6,20 +6,16 @@
 #include "context.hpp"
 #include "device.hpp"
 
-
 using namespace Vulkan;
 using namespace std;
-
-
 
 static int cmd_cur;
 static int cmd_ptr;
 static uint32_t cmd_data[0x00040000 >> 2];
 
-RDP::CommandProcessor* frontend = nullptr;
+RDP::CommandProcessor *frontend = nullptr;
 Device device;
 Context context;
-
 
 int32_t vk_rescaling;
 bool vk_ssreadbacks;
@@ -34,6 +30,7 @@ bool native_tex_rect = true;
 bool synchronous = true, divot_filter = true, gamma_dither = true;
 bool vi_aa = true, vi_scale = true, dither_filter = true;
 bool interlacing = true, super_sampled_read_back = false, super_sampled_dither = true;
+
 static const unsigned cmd_len_lut[64] = {
 	1, 1, 1, 1, 1, 1, 1, 1, 4, 6, 12, 14, 12, 14, 20, 22,
 	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,  1,  1,  1,  1,  1,
@@ -42,51 +39,48 @@ static const unsigned cmd_len_lut[64] = {
 };
 
 
-
 void vk_rasterize()
 {
 
-if(frontend)
-{
-	frontend->set_vi_register(RDP::VIRegister::Control, *GET_GFX_INFO(VI_STATUS_REG));
-	frontend->set_vi_register(RDP::VIRegister::Origin, *GET_GFX_INFO(VI_ORIGIN_REG));
-	frontend->set_vi_register(RDP::VIRegister::Width, *GET_GFX_INFO(VI_WIDTH_REG));
-	frontend->set_vi_register(RDP::VIRegister::Intr, *GET_GFX_INFO(VI_INTR_REG));
-	frontend->set_vi_register(RDP::VIRegister::VCurrentLine, *GET_GFX_INFO(VI_V_CURRENT_LINE_REG));
-	frontend->set_vi_register(RDP::VIRegister::Timing, *GET_GFX_INFO(VI_V_BURST_REG));
-	frontend->set_vi_register(RDP::VIRegister::VSync, *GET_GFX_INFO(VI_V_SYNC_REG));
-	frontend->set_vi_register(RDP::VIRegister::HSync, *GET_GFX_INFO(VI_H_SYNC_REG));
-	frontend->set_vi_register(RDP::VIRegister::Leap, *GET_GFX_INFO(VI_LEAP_REG));
-	frontend->set_vi_register(RDP::VIRegister::HStart, *GET_GFX_INFO(VI_H_START_REG));
-	frontend->set_vi_register(RDP::VIRegister::VStart, *GET_GFX_INFO(VI_V_START_REG));
-	frontend->set_vi_register(RDP::VIRegister::VBurst, *GET_GFX_INFO(VI_V_BURST_REG));
-	frontend->set_vi_register(RDP::VIRegister::XScale, *GET_GFX_INFO(VI_X_SCALE_REG));
-	frontend->set_vi_register(RDP::VIRegister::YScale, *GET_GFX_INFO(VI_Y_SCALE_REG));
+	if (frontend)
+	{
+		frontend->set_vi_register(RDP::VIRegister::Control, *GET_GFX_INFO(VI_STATUS_REG));
+		frontend->set_vi_register(RDP::VIRegister::Origin, *GET_GFX_INFO(VI_ORIGIN_REG));
+		frontend->set_vi_register(RDP::VIRegister::Width, *GET_GFX_INFO(VI_WIDTH_REG));
+		frontend->set_vi_register(RDP::VIRegister::Intr, *GET_GFX_INFO(VI_INTR_REG));
+		frontend->set_vi_register(RDP::VIRegister::VCurrentLine, *GET_GFX_INFO(VI_V_CURRENT_LINE_REG));
+		frontend->set_vi_register(RDP::VIRegister::Timing, *GET_GFX_INFO(VI_V_BURST_REG));
+		frontend->set_vi_register(RDP::VIRegister::VSync, *GET_GFX_INFO(VI_V_SYNC_REG));
+		frontend->set_vi_register(RDP::VIRegister::HSync, *GET_GFX_INFO(VI_H_SYNC_REG));
+		frontend->set_vi_register(RDP::VIRegister::Leap, *GET_GFX_INFO(VI_LEAP_REG));
+		frontend->set_vi_register(RDP::VIRegister::HStart, *GET_GFX_INFO(VI_H_START_REG));
+		frontend->set_vi_register(RDP::VIRegister::VStart, *GET_GFX_INFO(VI_V_START_REG));
+		frontend->set_vi_register(RDP::VIRegister::VBurst, *GET_GFX_INFO(VI_V_BURST_REG));
+		frontend->set_vi_register(RDP::VIRegister::XScale, *GET_GFX_INFO(VI_X_SCALE_REG));
+		frontend->set_vi_register(RDP::VIRegister::YScale, *GET_GFX_INFO(VI_Y_SCALE_REG));
 
-	frontend->begin_frame_context();
+		frontend->begin_frame_context();
 
-	unsigned width =0;
-    unsigned height = 0;
-std::vector<RDP::RGBA>cols;
-	frontend->scanout_sync(cols, width, height);
+		unsigned width = 0;
+		unsigned height = 0;
+		std::vector<RDP::RGBA> cols;
+		frontend->scanout_sync(cols, width, height);
 
-	
-if(width == 0 || height == 0)
-{
-screen_swap(true);
-return;
-}
+		if (width == 0 || height == 0)
+		{
+			screen_swap(true);
+			return;
+		}
 
-struct frame_buffer buf = { 0 };
-buf.pixels = (video_pixel*)cols.data();
-buf.valid = true;
-buf.height = height;
-buf.width = width;
-buf.pitch = width;
-screen_write(&buf);
-screen_swap(false);
-}
-
+		struct frame_buffer buf = {0};
+		buf.pixels = (video_pixel *)cols.data();
+		buf.valid = true;
+		buf.height = height;
+		buf.width = width;
+		buf.pitch = width;
+		screen_write(&buf);
+		screen_swap(false);
+	}
 }
 
 void vk_process_commands()
@@ -154,7 +148,8 @@ void vk_process_commands()
 		if (RDP::Op(command) == RDP::Op::SyncFull)
 		{
 			// For synchronous RDP:
-			if(frontend)frontend->wait_for_timeline(frontend->signal_timeline());
+			if (frontend)
+				frontend->wait_for_timeline(frontend->signal_timeline());
 			*gfx.MI_INTR_REG |= DP_INTERRUPT;
 			gfx.CheckInterrupts();
 		}
@@ -167,61 +162,62 @@ void vk_process_commands()
 	*GET_GFX_INFO(DPC_START_REG) = *GET_GFX_INFO(DPC_CURRENT_REG) = *GET_GFX_INFO(DPC_END_REG);
 }
 
-
 void vk_destroy()
 {
 	screen_close();
-	if(frontend)
+	if (frontend)
 	{
 		delete frontend;
 		frontend = nullptr;
 	}
-  
 }
 
 bool vk_init()
 {
-    screen_init();
+	screen_init();
 
-	if(!::Vulkan::Context::init_loader(nullptr)) return false ;
-     if(!context.init_instance_and_device(nullptr, 0, nullptr, 0, ::Vulkan::CONTEXT_CREATION_DISABLE_BINDLESS_BIT)) return false;
+	if (!::Vulkan::Context::init_loader(nullptr))
+		return false;
+	if (!context.init_instance_and_device(nullptr, 0, nullptr, 0, ::Vulkan::CONTEXT_CREATION_DISABLE_BINDLESS_BIT))
+		return false;
 
 	uintptr_t aligned_rdram = reinterpret_cast<uintptr_t>(gfx.RDRAM);
 	uintptr_t offset = 0;
 	device.set_context(context);
-    device.init_frame_contexts(1);
+	device.init_frame_contexts(1);
 	::RDP::CommandProcessorFlags flags = 0;
 
-    switch (vk_rescaling)
+	switch (vk_rescaling)
 	{
 	case 0:
 		break;
 	case 1:
-	    flags |= RDP::COMMAND_PROCESSOR_FLAG_UPSCALING_2X_BIT;
+		flags |= RDP::COMMAND_PROCESSOR_FLAG_UPSCALING_2X_BIT;
 		break;
 	case 2:
-	    flags |= RDP::COMMAND_PROCESSOR_FLAG_UPSCALING_4X_BIT;
+		flags |= RDP::COMMAND_PROCESSOR_FLAG_UPSCALING_4X_BIT;
 		break;
 	case 3:
-	    flags |= RDP::COMMAND_PROCESSOR_FLAG_UPSCALING_8X_BIT;
+		flags |= RDP::COMMAND_PROCESSOR_FLAG_UPSCALING_8X_BIT;
 		break;
-	
+
 	default:
 		break;
 	}
-	if (vk_rescaling >1 && vk_ssreadbacks)
+	if (vk_rescaling > 1 && vk_ssreadbacks)
 		flags |= RDP::COMMAND_PROCESSOR_FLAG_SUPER_SAMPLED_READ_BACK_BIT;
 	if (vk_ssdither)
 		flags |= RDP::COMMAND_PROCESSOR_FLAG_SUPER_SAMPLED_DITHER_BIT;
 
 	frontend = new RDP::CommandProcessor(device, reinterpret_cast<void *>(aligned_rdram),
-				offset, rdram_size, rdram_size / 2, flags);
-    if(!frontend->device_is_supported()) {
-    delete frontend;
-    frontend = nullptr;
-	return false;
-  }
-  return true;
+										 offset, rdram_size, rdram_size / 2, flags);
+	if (!frontend->device_is_supported())
+	{
+		delete frontend;
+		frontend = nullptr;
+		return false;
+	}
+	return true;
 }
 
 static const VkApplicationInfo parallel_app_info = {
@@ -238,4 +234,3 @@ const VkApplicationInfo *parallel_get_application_info(void)
 {
 	return &parallel_app_info;
 }
-

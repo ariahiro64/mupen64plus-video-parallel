@@ -2,8 +2,7 @@
 #include "gfx_m64p.h"
 #include "glguts.h"
 #include "gfxstructdefs.h"
-#include <memory>
-#include <vector>
+
 
 #ifdef __cplusplus
 extern "C"

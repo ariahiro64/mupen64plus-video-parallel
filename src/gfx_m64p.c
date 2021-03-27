@@ -67,10 +67,6 @@ static bool plugin_initialized;
 void (*debug_callback)(void *, int, const char *);
 void *debug_call_context;
 
-extern int32_t window_width;
-extern int32_t window_height;
-extern int32_t window_fullscreen;
-
 m64p_dynlib_handle CoreLibHandle;
 GFX_INFO gfx;
 void (*render_callback)(int);

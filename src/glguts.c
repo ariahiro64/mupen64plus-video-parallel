@@ -22,8 +22,8 @@ static ptr_VidExt_GL_SwapBuffers CoreVideo_GL_SwapBuffers = NULL;
 static bool toggle_fs;
 
 // framebuffer texture states
-int32_t window_width = 1024;
-int32_t window_height = 768;
+int32_t window_width;
+int32_t window_height;
 int32_t window_fullscreen = false;
 
 #include "gl_core_3_3.c"
@@ -35,9 +35,9 @@ static GLuint program;
 static GLuint vao;
 static GLuint texture;
 
-static int32_t tex_width;
-static int32_t tex_height;
-static int32_t tex_display_height;
+int32_t tex_width;
+int32_t tex_height;
+int32_t tex_display_height;
 
 void *IntGetProcAddress(const char *name)
 {
@@ -158,7 +158,7 @@ bool screen_write(struct frame_buffer *fb)
         glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, tex_width, tex_height,
                         TEX_FORMAT, TEX_TYPE, fb->pixels);
     }
-    tex_display_height = fb->width;
+    tex_display_height = fb->height;
 
     return buffer_size_changed;
 }
@@ -178,29 +178,19 @@ void screen_read(struct frame_buffer *fb, bool alpha)
     }
 }
 
-void gl_screen_render(int32_t win_width, int32_t win_height, int32_t win_x, int32_t win_y)
+void gl_screen_render()
 {
-    int32_t hw = tex_display_height * win_width;
-    int32_t wh = tex_width * win_height;
-
-    // add letterboxes or pillarboxes if the window has a different aspect ratio
-    // than the current display mode
-    if (hw > wh)
+    float aspect = tex_width / tex_height;
+    int width = window_width;
+    int height = (int)roundf(width / aspect);
+    if (height > window_height)
     {
-        int32_t w_max = wh / tex_display_height;
-        win_x += (win_width - w_max) / 2;
-        win_width = w_max;
+        height = window_height;
+        width = (int)roundf(height * aspect);
     }
-    else if (hw < wh)
-    {
-        int32_t h_max = hw / tex_width;
-        win_y += (win_height - h_max) / 2;
-        win_height = h_max;
-    }
-
-    // configure viewport
-    glViewport(win_x, win_y, win_width, win_height);
-
+    int vp_x = (window_width / 2) - (width / 2);
+    int vp_y = (window_height / 2) - (height / 2);
+    glViewport(vp_x, vp_y, width, height);
     // draw fullscreen triangle
     glDrawArrays(GL_TRIANGLES, 0, 3);
 
@@ -305,7 +295,7 @@ void screen_swap(bool blank)
 
     if (!blank)
     {
-        gl_screen_render(window_width, window_height, 0, 0);
+        gl_screen_render();
     }
 
     (*render_callback)(1);

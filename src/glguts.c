@@ -190,7 +190,7 @@ void gl_screen_render()
     }
     int vp_x = (window_width / 2) - (width / 2);
     int vp_y = (window_height / 2) - (height / 2);
-    glViewport(vp_x, vp_y, width, height);
+    glViewport(vp_x, window_height-(vp_y+height), width, height);
     // draw fullscreen triangle
     glDrawArrays(GL_TRIANGLES, 0, 3);
 

@@ -123,10 +123,11 @@ EXPORT m64p_error CALL PluginStartup(m64p_dynlib_handle _CoreLibHandle, void *Co
     ConfigGetParamInt = (ptr_ConfigGetParamInt)DLSYM(CoreLibHandle, "ConfigGetParamInt");
     ConfigGetParamBool = (ptr_ConfigGetParamBool)DLSYM(CoreLibHandle, "ConfigGetParamBool");
 
-    ConfigOpenSection("Video-General", &configVideoGeneral);
     ConfigOpenSection("Video-Parallel", &configVideoParallel);
-    ConfigSetDefaultBool(configVideoGeneral, KEY_FULLSCREEN, 0, "Use fullscreen mode if True, or windowed mode if False");
+    ConfigSetDefaultBool(configVideoParallel, KEY_FULLSCREEN, 0, "Use fullscreen mode if True, or windowed mode if False");
     ConfigSetDefaultInt(configVideoParallel, KEY_UPSCALING, 0, "Amount of rescaling: 0=None, 2=2x, 4=4x, 8=8x");
+    ConfigSetDefaultInt(configVideoParallel, KEY_SCREEN_WIDTH, 1024, "Screen width");
+    ConfigSetDefaultInt(configVideoParallel, KEY_SCREEN_HEIGHT, 768, "Screen width");
     ConfigSetDefaultBool(configVideoParallel, KEY_SSREADBACKS, 0, "Enable superscaling of readbacks when upsampling");
     ConfigSetDefaultBool(configVideoParallel, KEY_SSDITHER, 0, "Enable superscaling of dithering when upsampling");
 
@@ -141,7 +142,6 @@ EXPORT m64p_error CALL PluginStartup(m64p_dynlib_handle _CoreLibHandle, void *Co
     ConfigSetDefaultInt(configVideoParallel, KEY_DOWNSCALE, 0, "Downsampling factor, Downscales output after VI, equivalent to SSAA. 0=disabled, 1=1/2, 2=1/4, 3=1/8");
     ConfigSetDefaultBool(configVideoParallel, KEY_NATIVETEXTLOD, 0, "Use native texture LOD computation when upscaling, effectively a LOD bias.");
     ConfigSetDefaultBool(configVideoParallel, KEY_NATIVETEXTRECT, 1, "Native resolution TEX_RECT. TEX_RECT primitives should generally be TEX_RECT primitives should generally be rendered at native resolution to avoid seams.");
-    ConfigSaveSection("Video-General");
     ConfigSaveSection("Video-Parallel");
 
     plugin_initialized = true;
@@ -218,9 +218,9 @@ EXPORT void CALL ProcessRDPList(void)
 
 EXPORT int CALL RomOpen(void)
 {
-    window_fullscreen = ConfigGetParamBool(configVideoGeneral, KEY_FULLSCREEN);
-    window_width = ConfigGetParamInt(configVideoGeneral, KEY_SCREEN_WIDTH);
-    window_height = ConfigGetParamInt(configVideoGeneral, KEY_SCREEN_HEIGHT);
+    window_fullscreen = ConfigGetParamBool(configVideoParallel, KEY_FULLSCREEN);
+    window_width = ConfigGetParamInt(configVideoParallel, KEY_SCREEN_WIDTH);
+    window_height = ConfigGetParamInt(configVideoParallel, KEY_SCREEN_HEIGHT);
     vk_rescaling = ConfigGetParamInt(configVideoParallel, KEY_UPSCALING);
     vk_ssreadbacks = ConfigGetParamBool(configVideoParallel, KEY_SSREADBACKS);
     window_integerscale = ConfigGetParamBool(configVideoParallel, KEY_INTEGER);

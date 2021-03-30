@@ -25,6 +25,7 @@ static bool toggle_fs;
 int32_t window_width;
 int32_t window_height;
 int32_t window_fullscreen;
+bool window_integerscale;
 
 #include "gl_core_3_3.c"
 #define SHADER_HEADER "#version 330 core\n"
@@ -37,7 +38,6 @@ static GLuint texture;
 
 int32_t tex_width;
 int32_t tex_height;
-int32_t tex_display_height;
 
 void *IntGetProcAddress(const char *name)
 {
@@ -158,7 +158,6 @@ bool screen_write(struct frame_buffer *fb)
         glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, tex_width, tex_height,
                         TEX_FORMAT, TEX_TYPE, fb->pixels);
     }
-    tex_display_height = fb->height;
 
     return buffer_size_changed;
 }
@@ -178,38 +177,49 @@ void screen_read(struct frame_buffer *fb, bool alpha)
     }
 }
 
-
 void gl_screen_render()
 {
+    if(window_integerscale)
+    {
+    float aspect = 640 / 480;
+    int width = window_width;
+    int height = (int)roundf(width / aspect);
+    if (height > window_height)
+    {
+        height = window_height;
+        width = (int)roundf(height * aspect);
+    }
+    int vp_x = (window_width / 2) - (width / 2);
+    int vp_y = (window_height / 2) - (height / 2);
+    glViewport(vp_x, window_height-(vp_y+height), width, height);
+    }
+    else
+    {
+    int win_width = window_width;
+    int win_height = window_height;
+    int win_x = 0;
+    int win_y=0;
+    int32_t hw =  480 * win_width;
+    int32_t wh = 640 * win_height;
 
- int32_t win_width =window_width;
-    int32_t win_height=window_height;
-    int32_t win_x=0;
-    int32_t win_y=0;
-    int32_t texw = 640;
-    int32_t texh = 480;
+    // add letterboxes or pillarboxes if the window has a different aspect ratio
+    // than the current display mode
+    if (hw > wh) {
+        int32_t w_max = wh / 480;
+        win_x += (win_width - w_max) / 2;
+        win_width = w_max;
+    } else if (hw < wh) {
+        int32_t h_max = hw / 640;
+        win_y += (win_height - h_max) / 2;
+        win_height = h_max;
+    }
+    // configure viewport
+    glViewport(win_x, win_y, win_width, win_height);
+    }
 
-    uint32_t scale_x = (uint32_t)win_width < texw ? 1 : (uint32_t)win_width / texw;
-    uint32_t scale_y = (uint32_t)win_height < texh ? 1 : (uint32_t)win_height / texh;
-    uint32_t scale = scale_x > scale_y ? scale_x : scale_y;
-
-        // get new window size (or rather viewport size in this context)
-        int32_t win_width_new = texw * scale;
-        int32_t win_height_new = texh * scale;
-
-        // apply new size and offset
-        win_x = (win_width - win_width_new) / 2;
-        win_y = (win_height - win_height_new) / 2;
-
-        win_width = win_width_new;
-        win_height = win_height_new;
- glViewport(win_x, win_y, win_width, win_height);
-
+    
     // draw fullscreen triangle
     glDrawArrays(GL_TRIANGLES, 0, 3);
-
-    // check if there was an error when using any of the commands above
-    gl_check_errors();
 }
 
 void gl_screen_clear(void)
@@ -249,6 +259,7 @@ void screen_init()
     CoreVideo_GL_SetAttribute(M64P_GL_CONTEXT_PROFILE_MASK, M64P_GL_CONTEXT_PROFILE_CORE);
     CoreVideo_GL_SetAttribute(M64P_GL_CONTEXT_MAJOR_VERSION, 3);
     CoreVideo_GL_SetAttribute(M64P_GL_CONTEXT_MINOR_VERSION, 3);
+
 
     CoreVideo_SetVideoMode(window_width, window_height, 0, window_fullscreen ? M64VIDEO_FULLSCREEN : M64VIDEO_WINDOWED, M64VIDEOFLAG_SUPPORT_RESIZING);
 

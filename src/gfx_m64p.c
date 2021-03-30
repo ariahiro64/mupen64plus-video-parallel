@@ -39,6 +39,7 @@
 #define KEY_NATIVETEXTRECT "NativeTextRECT"
 #define KEY_NATIVETEXTLOD "NativeTextLOD"
 #define KEY_DEINTERLACE "Deinterlace"
+#define KEY_INTEGER "IntegerScale"
 
 #include <stdlib.h>
 #include <string.h>
@@ -130,6 +131,7 @@ EXPORT m64p_error CALL PluginStartup(m64p_dynlib_handle _CoreLibHandle, void *Co
     ConfigSetDefaultBool(configVideoParallel, KEY_SSDITHER, 0, "Enable superscaling of dithering when upsampling");
 
     ConfigSetDefaultBool(configVideoParallel, KEY_DEINTERLACE, 0, "Deinterlacing method. Weave should only be used with 1x scaling factor. False=Bob, True=Weave");
+    ConfigSetDefaultBool(configVideoParallel, KEY_INTEGER, 0, "Enable integer scaling");
     ConfigSetDefaultInt(configVideoParallel, KEY_OVERSCANCROP, 0, "Amount of overscan pixels to crop");
     ConfigSetDefaultBool(configVideoParallel, KEY_AA, 1, "VI anti-aliasing, smooths polygon edges.");
     ConfigSetDefaultBool(configVideoParallel, KEY_DIVOT, 1, "Allow VI divot filter, cleans up stray black pixels.");
@@ -220,6 +222,7 @@ EXPORT int CALL RomOpen(void)
     window_height = ConfigGetParamInt(configVideoGeneral, KEY_SCREEN_HEIGHT);
     vk_rescaling = ConfigGetParamInt(configVideoParallel, KEY_UPSCALING);
     vk_ssreadbacks = ConfigGetParamBool(configVideoParallel, KEY_SSREADBACKS);
+    window_integerscale = ConfigGetParamBool(configVideoParallel, KEY_INTEGER);
     vk_ssdither = ConfigGetParamBool(configVideoParallel, KEY_SSDITHER);
 
     vk_divot_filter = ConfigGetParamBool(configVideoParallel, KEY_DIVOT);

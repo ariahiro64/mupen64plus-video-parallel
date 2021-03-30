@@ -29,7 +29,6 @@ extern "C"
     bool screen_write(struct frame_buffer *fb);
     void screen_read(struct frame_buffer *fb, bool alpha);
     void screen_init();
-    void screen_adjust(int32_t width_out, int32_t height_out, int32_t *width, int32_t *height, int32_t *x, int32_t *y);
     void screen_update(void);
     void screen_toggle_fullscreen(void);
     void screen_close(void);

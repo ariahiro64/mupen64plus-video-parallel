@@ -24,7 +24,7 @@ static bool toggle_fs;
 // framebuffer texture states
 int32_t window_width;
 int32_t window_height;
-int32_t window_fullscreen = false;
+int32_t window_fullscreen;
 
 #include "gl_core_3_3.c"
 #define SHADER_HEADER "#version 330 core\n"
@@ -178,19 +178,33 @@ void screen_read(struct frame_buffer *fb, bool alpha)
     }
 }
 
+
 void gl_screen_render()
 {
-    float aspect = tex_width / tex_height;
-    int width = window_width;
-    int height = (int)roundf(width / aspect);
-    if (height > window_height)
-    {
-        height = window_height;
-        width = (int)roundf(height * aspect);
-    }
-    int vp_x = (window_width / 2) - (width / 2);
-    int vp_y = (window_height / 2) - (height / 2);
-    glViewport(vp_x, window_height-(vp_y+height), width, height);
+
+ int32_t win_width =window_width;
+    int32_t win_height=window_height;
+    int32_t win_x=0;
+    int32_t win_y=0;
+    int32_t texw = 640;
+    int32_t texh = 480;
+
+    uint32_t scale_x = (uint32_t)win_width < texw ? 1 : (uint32_t)win_width / texw;
+    uint32_t scale_y = (uint32_t)win_height < texh ? 1 : (uint32_t)win_height / texh;
+    uint32_t scale = scale_x > scale_y ? scale_x : scale_y;
+
+        // get new window size (or rather viewport size in this context)
+        int32_t win_width_new = texw * scale;
+        int32_t win_height_new = texh * scale;
+
+        // apply new size and offset
+        win_x = (win_width - win_width_new) / 2;
+        win_y = (win_height - win_height_new) / 2;
+
+        win_width = win_width_new;
+        win_height = win_height_new;
+ glViewport(win_x, win_y, win_width, win_height);
+
     // draw fullscreen triangle
     glDrawArrays(GL_TRIANGLES, 0, 3);
 

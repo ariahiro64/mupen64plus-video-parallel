@@ -233,9 +233,9 @@ EXPORT int CALL RomOpen(void)
     vk_dither_filter = ConfigGetParamBool(configVideoParallel, KEY_VIDITHER);
     vk_native_texture_lod = ConfigGetParamBool(configVideoParallel, KEY_NATIVETEXTLOD);
     vk_native_tex_rect = ConfigGetParamBool(configVideoParallel, KEY_NATIVETEXTRECT);
-    vk_interlacing = ConfigGetParamBool(configVideoGeneral, KEY_DEINTERLACE);
-    vk_downscaling_steps = ConfigGetParamInt(configVideoGeneral, KEY_DOWNSCALE);
-    vk_overscan = ConfigGetParamInt(configVideoGeneral, KEY_OVERSCANCROP);
+    vk_interlacing = ConfigGetParamBool(configVideoParallel, KEY_DEINTERLACE);
+    vk_downscaling_steps = ConfigGetParamInt(configVideoParallel, KEY_DOWNSCALE);
+    vk_overscan = ConfigGetParamInt(configVideoParallel, KEY_OVERSCANCROP);
 
     plugin_init();
     vk_init();

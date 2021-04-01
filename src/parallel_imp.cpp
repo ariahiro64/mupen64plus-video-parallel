@@ -36,44 +36,42 @@ static const unsigned cmd_len_lut[64] = {
 	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,  1,  1,  1,  1,  1,
 };
 
-
 void vk_blit(std::vector<RDP::RGBA> &colors, unsigned &width, unsigned &height)
 {
-	if(running)
+	if (running)
 	{
 
-	
-	RDP::ScanoutOptions opts = {};
-	opts.persist_frame_on_invalid_input = true;
-	opts.vi.aa = vk_vi_aa;
-	opts.vi.scale = vk_vi_scale;
-	opts.vi.dither_filter = vk_dither_filter;
-	opts.vi.divot_filter = vk_divot_filter;
-	opts.vi.gamma_dither = vk_gamma_dither;
-	opts.blend_previous_frame = vk_interlacing;
-	opts.upscale_deinterlacing = !vk_interlacing;
-	opts.downscale_steps = vk_downscaling_steps;
-	opts.crop_overscan_pixels = vk_overscan;
+		RDP::ScanoutOptions opts = {};
+		opts.persist_frame_on_invalid_input = true;
+		opts.vi.aa = vk_vi_aa;
+		opts.vi.scale = vk_vi_scale;
+		opts.vi.dither_filter = vk_dither_filter;
+		opts.vi.divot_filter = vk_divot_filter;
+		opts.vi.gamma_dither = vk_gamma_dither;
+		opts.blend_previous_frame = vk_interlacing;
+		opts.upscale_deinterlacing = !vk_interlacing;
+		opts.downscale_steps = vk_downscaling_steps;
+		opts.crop_overscan_pixels = vk_overscan;
 
-	RDP::VIScanoutBuffer scanout;
-	frontend->scanout_async_buffer(scanout, opts);
+		RDP::VIScanoutBuffer scanout;
+		frontend->scanout_async_buffer(scanout, opts);
 
-	if (!scanout.width || !scanout.height)
-	{
-		width = 0;
-		height = 0;
-		colors.clear();
-		return;
-	}
+		if (!scanout.width || !scanout.height)
+		{
+			width = 0;
+			height = 0;
+			colors.clear();
+			return;
+		}
 
-	width = scanout.width;
-	height = scanout.height;
-	colors.resize(width * height);
+		width = scanout.width;
+		height = scanout.height;
+		colors.resize(width * height);
 
-	scanout.fence->wait();
-	memcpy(colors.data(), device->map_host_buffer(*scanout.buffer, Vulkan::MEMORY_ACCESS_READ_BIT),
-		   width * height * sizeof(uint32_t));
-	device->unmap_host_buffer(*scanout.buffer, Vulkan::MEMORY_ACCESS_READ_BIT);
+		scanout.fence->wait();
+		memcpy(colors.data(), device->map_host_buffer(*scanout.buffer, Vulkan::MEMORY_ACCESS_READ_BIT),
+			   width * height * sizeof(uint32_t));
+		device->unmap_host_buffer(*scanout.buffer, Vulkan::MEMORY_ACCESS_READ_BIT);
 	}
 }
 
@@ -123,82 +121,81 @@ void vk_rasterize()
 
 void vk_process_commands()
 {
-	if(running)
+	if (running)
 	{
 
-	
-	const uint32_t DP_CURRENT = *GET_GFX_INFO(DPC_CURRENT_REG) & 0x00FFFFF8;
-	const uint32_t DP_END = *GET_GFX_INFO(DPC_END_REG) & 0x00FFFFF8;
+		const uint32_t DP_CURRENT = *GET_GFX_INFO(DPC_CURRENT_REG) & 0x00FFFFF8;
+		const uint32_t DP_END = *GET_GFX_INFO(DPC_END_REG) & 0x00FFFFF8;
 
-	int length = DP_END - DP_CURRENT;
-	if (length <= 0)
-		return;
-
-	length = unsigned(length) >> 3;
-	if ((cmd_ptr + length) & ~(0x0003FFFF >> 3))
-		return;
-
-	uint32_t offset = DP_CURRENT;
-	if (*GET_GFX_INFO(DPC_STATUS_REG) & DP_STATUS_XBUS_DMA)
-	{
-		do
-		{
-			offset &= 0xFF8;
-			cmd_data[2 * cmd_ptr + 0] = *reinterpret_cast<const uint32_t *>(SP_DMEM + offset);
-			cmd_data[2 * cmd_ptr + 1] = *reinterpret_cast<const uint32_t *>(SP_DMEM + offset + 4);
-			offset += sizeof(uint64_t);
-			cmd_ptr++;
-		} while (--length > 0);
-	}
-	else
-	{
-		if (DP_END > 0x7ffffff || DP_CURRENT > 0x7ffffff)
-		{
+		int length = DP_END - DP_CURRENT;
+		if (length <= 0)
 			return;
-		}
-		else
+
+		length = unsigned(length) >> 3;
+		if ((cmd_ptr + length) & ~(0x0003FFFF >> 3))
+			return;
+
+		uint32_t offset = DP_CURRENT;
+		if (*GET_GFX_INFO(DPC_STATUS_REG) & DP_STATUS_XBUS_DMA)
 		{
 			do
 			{
-				offset &= 0xFFFFF8;
-				cmd_data[2 * cmd_ptr + 0] = *reinterpret_cast<const uint32_t *>(DRAM + offset);
-				cmd_data[2 * cmd_ptr + 1] = *reinterpret_cast<const uint32_t *>(DRAM + offset + 4);
+				offset &= 0xFF8;
+				cmd_data[2 * cmd_ptr + 0] = *reinterpret_cast<const uint32_t *>(SP_DMEM + offset);
+				cmd_data[2 * cmd_ptr + 1] = *reinterpret_cast<const uint32_t *>(SP_DMEM + offset + 4);
 				offset += sizeof(uint64_t);
 				cmd_ptr++;
 			} while (--length > 0);
 		}
-	}
-
-	while (cmd_cur - cmd_ptr < 0)
-	{
-		uint32_t w1 = cmd_data[2 * cmd_cur];
-		uint32_t command = (w1 >> 24) & 63;
-		int cmd_length = cmd_len_lut[command];
-
-		if (cmd_ptr - cmd_cur - cmd_length < 0)
+		else
 		{
-			*GET_GFX_INFO(DPC_START_REG) = *GET_GFX_INFO(DPC_CURRENT_REG) = *GET_GFX_INFO(DPC_END_REG);
-			return;
+			if (DP_END > 0x7ffffff || DP_CURRENT > 0x7ffffff)
+			{
+				return;
+			}
+			else
+			{
+				do
+				{
+					offset &= 0xFFFFF8;
+					cmd_data[2 * cmd_ptr + 0] = *reinterpret_cast<const uint32_t *>(DRAM + offset);
+					cmd_data[2 * cmd_ptr + 1] = *reinterpret_cast<const uint32_t *>(DRAM + offset + 4);
+					offset += sizeof(uint64_t);
+					cmd_ptr++;
+				} while (--length > 0);
+			}
 		}
 
-		if (command >= 8 && frontend)
-			frontend->enqueue_command(cmd_length * 2, &cmd_data[2 * cmd_cur]);
-
-		if (RDP::Op(command) == RDP::Op::SyncFull)
+		while (cmd_cur - cmd_ptr < 0)
 		{
-			// For synchronous RDP:
-			if (frontend)
-				frontend->wait_for_timeline(frontend->signal_timeline());
-			*gfx.MI_INTR_REG |= DP_INTERRUPT;
-			gfx.CheckInterrupts();
+			uint32_t w1 = cmd_data[2 * cmd_cur];
+			uint32_t command = (w1 >> 24) & 63;
+			int cmd_length = cmd_len_lut[command];
+
+			if (cmd_ptr - cmd_cur - cmd_length < 0)
+			{
+				*GET_GFX_INFO(DPC_START_REG) = *GET_GFX_INFO(DPC_CURRENT_REG) = *GET_GFX_INFO(DPC_END_REG);
+				return;
+			}
+
+			if (command >= 8 && frontend)
+				frontend->enqueue_command(cmd_length * 2, &cmd_data[2 * cmd_cur]);
+
+			if (RDP::Op(command) == RDP::Op::SyncFull)
+			{
+				// For synchronous RDP:
+				if (frontend)
+					frontend->wait_for_timeline(frontend->signal_timeline());
+				*gfx.MI_INTR_REG |= DP_INTERRUPT;
+				gfx.CheckInterrupts();
+			}
+
+			cmd_cur += cmd_length;
 		}
 
-		cmd_cur += cmd_length;
-	}
-
-	cmd_ptr = 0;
-	cmd_cur = 0;
-	*GET_GFX_INFO(DPC_START_REG) = *GET_GFX_INFO(DPC_CURRENT_REG) = *GET_GFX_INFO(DPC_END_REG);
+		cmd_ptr = 0;
+		cmd_cur = 0;
+		*GET_GFX_INFO(DPC_START_REG) = *GET_GFX_INFO(DPC_CURRENT_REG) = *GET_GFX_INFO(DPC_END_REG);
 	}
 }
 
@@ -208,7 +205,7 @@ void vk_destroy()
 	frontend.reset();
 	device.reset();
 	context.reset();
-	
+
 	screen_close();
 }
 
@@ -224,7 +221,7 @@ bool vk_init()
 		return false;
 	if (!context->init_instance_and_device(nullptr, 0, nullptr, 0, ::Vulkan::CONTEXT_CREATION_DISABLE_BINDLESS_BIT))
 		return false;
-    
+
 	uintptr_t aligned_rdram = reinterpret_cast<uintptr_t>(gfx.RDRAM);
 	uintptr_t offset = 0;
 	device->set_context(*context);
@@ -254,7 +251,7 @@ bool vk_init()
 		flags |= RDP::COMMAND_PROCESSOR_FLAG_SUPER_SAMPLED_DITHER_BIT;
 
 	frontend.reset(new RDP::CommandProcessor(*device, reinterpret_cast<void *>(aligned_rdram),
-				offset, rdram_size, rdram_size / 2, flags));
+											 offset, rdram_size, rdram_size / 2, flags));
 	if (!frontend->device_is_supported())
 	{
 		frontend.reset();

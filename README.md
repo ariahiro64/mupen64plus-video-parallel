@@ -8,7 +8,10 @@ To compile using MSYS2
 1) Clone/fork the Github repo only.
 2) At "unix" directory, use "make all platform=win"
 
-Your choices for using this include the commandline client or "m64p".
+Your choices for using this include: 
+* the commandline client
+* Rosalie's Mupen GUI 
+* "m64p"
 To use it with m64p (for Windows):
 
 1) Compile using the steps above.

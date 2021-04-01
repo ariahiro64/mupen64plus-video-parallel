@@ -235,8 +235,6 @@ void gl_screen_close(void)
     glDeleteTextures(1, &texture);
     glDeleteVertexArrays(1, &vao);
     glDeleteProgram(program);
-
-    screen_close();
 }
 
 void screen_init()

@@ -12,14 +12,14 @@ static int cmd_cur;
 static int cmd_ptr;
 static uint32_t cmd_data[0x00040000 >> 2];
 
-RDP::CommandProcessor *frontend = nullptr;
-Device device;
-Context context;
+static unique_ptr<RDP::CommandProcessor> frontend;
+static unique_ptr<Device> device;
+static unique_ptr<Context> context;
 
 int32_t vk_rescaling;
 bool vk_ssreadbacks;
 bool vk_ssdither;
-
+bool running = false;
 unsigned width, height;
 unsigned vk_overscan;
 unsigned vk_downscaling_steps;
@@ -39,6 +39,10 @@ static const unsigned cmd_len_lut[64] = {
 
 void vk_blit(std::vector<RDP::RGBA> &colors, unsigned &width, unsigned &height)
 {
+	if(running)
+	{
+
+	
 	RDP::ScanoutOptions opts = {};
 	opts.persist_frame_on_invalid_input = true;
 	opts.vi.aa = vk_vi_aa;
@@ -67,15 +71,16 @@ void vk_blit(std::vector<RDP::RGBA> &colors, unsigned &width, unsigned &height)
 	colors.resize(width * height);
 
 	scanout.fence->wait();
-	memcpy(colors.data(), device.map_host_buffer(*scanout.buffer, Vulkan::MEMORY_ACCESS_READ_BIT),
+	memcpy(colors.data(), device->map_host_buffer(*scanout.buffer, Vulkan::MEMORY_ACCESS_READ_BIT),
 		   width * height * sizeof(uint32_t));
-	device.unmap_host_buffer(*scanout.buffer, Vulkan::MEMORY_ACCESS_READ_BIT);
+	device->unmap_host_buffer(*scanout.buffer, Vulkan::MEMORY_ACCESS_READ_BIT);
+	}
 }
 
 void vk_rasterize()
 {
 
-	if (frontend)
+	if (frontend && running)
 	{
 		frontend->set_vi_register(RDP::VIRegister::Control, *GET_GFX_INFO(VI_STATUS_REG));
 		frontend->set_vi_register(RDP::VIRegister::Origin, *GET_GFX_INFO(VI_ORIGIN_REG));
@@ -118,6 +123,10 @@ void vk_rasterize()
 
 void vk_process_commands()
 {
+	if(running)
+	{
+
+	
 	const uint32_t DP_CURRENT = *GET_GFX_INFO(DPC_CURRENT_REG) & 0x00FFFFF8;
 	const uint32_t DP_END = *GET_GFX_INFO(DPC_END_REG) & 0x00FFFFF8;
 
@@ -190,31 +199,36 @@ void vk_process_commands()
 	cmd_ptr = 0;
 	cmd_cur = 0;
 	*GET_GFX_INFO(DPC_START_REG) = *GET_GFX_INFO(DPC_CURRENT_REG) = *GET_GFX_INFO(DPC_END_REG);
+	}
 }
 
 void vk_destroy()
 {
+	running = false;
+	frontend.reset();
+	device.reset();
+	context.reset();
+	
 	screen_close();
-	if (frontend)
-	{
-		delete frontend;
-		frontend = nullptr;
-	}
 }
 
 bool vk_init()
 {
+	running = false;
 	screen_init();
+	context.reset(new Context);
+	device.reset(new Device);
+	frontend.reset();
 
 	if (!::Vulkan::Context::init_loader(nullptr))
 		return false;
-	if (!context.init_instance_and_device(nullptr, 0, nullptr, 0, ::Vulkan::CONTEXT_CREATION_DISABLE_BINDLESS_BIT))
+	if (!context->init_instance_and_device(nullptr, 0, nullptr, 0, ::Vulkan::CONTEXT_CREATION_DISABLE_BINDLESS_BIT))
 		return false;
-
+    
 	uintptr_t aligned_rdram = reinterpret_cast<uintptr_t>(gfx.RDRAM);
 	uintptr_t offset = 0;
-	device.set_context(context);
-	device.init_frame_contexts(1);
+	device->set_context(*context);
+	device->init_frame_contexts(1);
 	::RDP::CommandProcessorFlags flags = 0;
 
 	switch (vk_rescaling)
@@ -239,14 +253,14 @@ bool vk_init()
 	if (vk_ssdither)
 		flags |= RDP::COMMAND_PROCESSOR_FLAG_SUPER_SAMPLED_DITHER_BIT;
 
-	frontend = new RDP::CommandProcessor(device, reinterpret_cast<void *>(aligned_rdram),
-										 offset, rdram_size, rdram_size / 2, flags);
+	frontend.reset(new RDP::CommandProcessor(*device, reinterpret_cast<void *>(aligned_rdram),
+				offset, rdram_size, rdram_size / 2, flags));
 	if (!frontend->device_is_supported())
 	{
-		delete frontend;
-		frontend = nullptr;
+		frontend.reset();
 		return false;
 	}
+	running = true;
 	return true;
 }
 

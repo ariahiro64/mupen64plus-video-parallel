@@ -2,6 +2,11 @@
 
 Implementation of Themaister's Vulkan RDP emulator over OGL 3.3.
 
+
+**Disclaimer**
+
+**Do not expect any support/help. Pull requests will be dismissed.**
+
 Made after a few days of messing around with GCC and some misc. sources.
 
 To compile using MSYS2 

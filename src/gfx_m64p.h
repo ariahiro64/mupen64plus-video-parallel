@@ -10,9 +10,6 @@
 #define DLSYM(a, b) dlsym(a, b)
 #endif
 
-extern int32_t win_width;
-extern int32_t win_height;
-extern int32_t win_fullscreen;
 extern uint32_t rdram_size;
 extern GFX_INFO gfx;
 extern m64p_dynlib_handle CoreLibHandle;

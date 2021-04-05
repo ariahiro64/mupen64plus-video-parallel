@@ -224,6 +224,20 @@ bool vk_init()
 
 	uintptr_t aligned_rdram = reinterpret_cast<uintptr_t>(gfx.RDRAM);
 	uintptr_t offset = 0;
+
+
+    if (device->get_device_features().supports_external_memory_host)
+	{
+		size_t align = device->get_device_features().host_memory_properties.minImportedHostPointerAlignment;
+		offset = aligned_rdram & (align - 1);
+
+		if (offset)
+		{
+			return false;
+		}
+		aligned_rdram -= offset;
+	}
+
 	device->set_context(*context);
 	device->init_frame_contexts(1);
 	::RDP::CommandProcessorFlags flags = 0;

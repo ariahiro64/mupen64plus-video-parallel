@@ -26,6 +26,7 @@ int32_t window_width;
 int32_t window_height;
 int32_t window_fullscreen;
 bool window_integerscale;
+bool window_vsync;
 
 #include "gl_core_3_3.c"
 #define SHADER_HEADER "#version 330 core\n"
@@ -199,17 +200,17 @@ void gl_screen_render()
     int win_height = window_height;
     int win_x = 0;
     int win_y=0;
-    int32_t hw =  480 * win_width;
-    int32_t wh = 640 * win_height;
+    int32_t hw =  tex_height * win_width;
+    int32_t wh = tex_width * win_height;
 
     // add letterboxes or pillarboxes if the window has a different aspect ratio
     // than the current display mode
     if (hw > wh) {
-        int32_t w_max = wh / 480;
+        int32_t w_max = wh / tex_height;
         win_x += (win_width - w_max) / 2;
         win_width = w_max;
     } else if (hw < wh) {
-        int32_t h_max = hw / 640;
+        int32_t h_max = hw / tex_width;
         win_y += (win_height - h_max) / 2;
         win_height = h_max;
     }

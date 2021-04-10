@@ -181,7 +181,7 @@ void gl_screen_render()
 {
     if(window_integerscale)
     {
-    float aspect = 640 / 480;
+    float aspect = tex_width / tex_height;
     int width = window_width;
     int height = (int)roundf(width / aspect);
     if (height > window_height)

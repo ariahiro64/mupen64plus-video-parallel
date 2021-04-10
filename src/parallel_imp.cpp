@@ -244,7 +244,7 @@ bool vk_init()
 
 	switch (vk_rescaling)
 	{
-	case 0:
+	case 1:
 		break;
 	case 2:
 		flags |= RDP::COMMAND_PROCESSOR_FLAG_UPSCALING_2X_BIT;
@@ -259,7 +259,7 @@ bool vk_init()
 	default:
 		break;
 	}
-	if (vk_rescaling && vk_ssreadbacks)
+	if (vk_rescaling >1 && vk_ssreadbacks)
 		flags |= RDP::COMMAND_PROCESSOR_FLAG_SUPER_SAMPLED_READ_BACK_BIT;
 	if (vk_ssdither)
 		flags |= RDP::COMMAND_PROCESSOR_FLAG_SUPER_SAMPLED_DITHER_BIT;

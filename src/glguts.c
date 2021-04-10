@@ -39,6 +39,8 @@ static GLuint texture;
 
 int32_t tex_width;
 int32_t tex_height;
+int display_width;
+int display_height;
 
 void *IntGetProcAddress(const char *name)
 {
@@ -180,9 +182,12 @@ void screen_read(struct frame_buffer *fb, bool alpha)
 
 void gl_screen_render()
 {
+    display_width = 640 * vk_rescaling;
+    display_height = 480 * vk_rescaling;
+
     if(window_integerscale)
     {
-    float aspect = tex_width / tex_height;
+    float aspect =  display_width /  display_height;
     int width = window_width;
     int height = (int)roundf(width / aspect);
     if (height > window_height)
@@ -200,17 +205,17 @@ void gl_screen_render()
     int win_height = window_height;
     int win_x = 0;
     int win_y=0;
-    int32_t hw =  tex_height * win_width;
-    int32_t wh = tex_width * win_height;
+    int32_t hw =   display_height * win_width;
+    int32_t wh =  display_width * win_height;
 
     // add letterboxes or pillarboxes if the window has a different aspect ratio
     // than the current display mode
     if (hw > wh) {
-        int32_t w_max = wh / tex_height;
+        int32_t w_max = wh /  display_height;
         win_x += (win_width - w_max) / 2;
         win_width = w_max;
     } else if (hw < wh) {
-        int32_t h_max = hw / tex_width;
+        int32_t h_max = hw /  display_width;
         win_y += (win_height - h_max) / 2;
         win_height = h_max;
     }
